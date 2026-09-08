@@ -278,3 +278,243 @@
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Association Rule Mining Guide using WEKA</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #121212;
+        }
+        h1, h2, h3 {
+            color: #e2e8f0;
+            border-bottom: 2px solid #2d3748;
+            padding-bottom: 8px;
+        }
+        h1 {
+            font-size: 2.2em;
+            margin-top: 0;
+            color: #64b5f6;
+        }
+        h2 {
+            font-size: 1.5em;
+            margin-top: 30px;
+        }
+        .metric-card {
+            background-color: #1e1e1e;
+            border-left: 4px solid #64b5f6;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            border-radius: 0 4px 4px 0;
+        }
+        .metric-title {
+            font-weight: bold;
+            color: #90caf9;
+            font-size: 1.1em;
+        }
+        .formula {
+            background-color: #262626;
+            border: 1px solid #333333;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+            display: inline-block;
+            margin: 8px 0;
+            color: #81c784;
+        }
+        code, pre {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            border-radius: 4px;
+        }
+        code {
+            padding: 2px 6px;
+            font-size: 0.9em;
+            background-color: #2d3748;
+            color: #ff8a65;
+        }
+        pre {
+            background-color: #1e1e1e;
+            color: #f8f8f2;
+            padding: 15px;
+            overflow-x: auto;
+            line-height: 1.45;
+            border: 1px solid #2d3748;
+        }
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #2d3748;
+        }
+        th {
+            background-color: #1e3a8a;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        tr:nth-of-type(even) {
+            background-color: #262626;
+        }
+        tr:last-of-type {
+            border-bottom: 2px solid #64b5f6;
+        }
+        ol, ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: bold;
+            background-color: #374151;
+            color: #93c5fd;
+        }
+        a {
+            color: #64b5f6;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Association Rule Mining via Apriori in WEKA (v3.4.1)</h1>
+    <p>This guide details how to perform Association Rule Mining using the Apriori algorithm in WEKA (v3.4.1) through both the Graphical User Interface (GUI) and the Simple Command Line Interface (CLI).</p>
+
+    <h2>1. Key Metric Definitions</h2>
+    <p>WEKA evaluates association rules (<em>L &Rightarrow; R</em>) using several quantitative metrics:</p>
+
+    <div class="metric-card">
+        <div class="metric-title">Support</div>
+        <p>The proportion of transactions containing a given itemset. Apriori iteratively steps down support from an Upper Bound (1.0 / 100%) to a Lower Bound (0.1 / 10%) using step decrements (&Delta; = 0.05).</p>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-title">Lift</div>
+        <div class="formula">Lift = P(L, R) / (P(L) &middot; P(R))</div>
+        <p>Measures co-occurrence likelihood relative to pure random chance. Values &gt; 1 indicate positive dependence between the antecedent and consequent.</p>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-title">Leverage</div>
+        <div class="formula">Leverage = P(L, R) - (P(L) &middot; P(R))</div>
+        <p>Measures the proportion of additional cases covering both <em>L</em> and <em>R</em> beyond independent expectations. Target values are &gt; 0.</p>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-title">Conviction</div>
+        <div class="formula">Conviction = (P(L) &middot; P(&not;R)) / P(L, &not;R)</div>
+        <p>Measures the strength of a rule by evaluating the frequency of the right-hand side failing to occur when the left-hand side occurs. Asymmetric metric with no upper bound.</p>
+    </div>
+
+    <h2>2. Workflow Options</h2>
+
+    <h3>GUI Method (Explorer)</h3>
+    <ol>
+        <li><strong>Load Data:</strong> Open WEKA Explorer and load preprocessed, discretized data (e.g., <code>bank-data-final.arff</code>).</li>
+        <li><strong>Select Module:</strong> Navigate to the <strong>Associate</strong> tab (defaults to the Apriori algorithm).</li>
+        <li><strong>Configure Parameters:</strong> Click the command-line options box next to the "Choose" button to set parameters:
+            <ul>
+                <li><strong>Metric Type (<code>-T</code>):</strong> Set sorting criteria (e.g., set metric to Lift at a minimum threshold of 1.5).</li>
+                <li><strong>Rule Limit (<code>-N</code>):</strong> Increase maximum output rules (e.g., change default from 10 to 100).</li>
+                <li><strong>Bounds (<code>-U</code> / <code>-M</code>):</strong> Set Upper Bound support to 1.0 and Lower Bound support to 0.1.</li>
+            </ul>
+        </li>
+        <li><strong>Execute &amp; Save:</strong> Click <strong>Start</strong>. Select a run in the Result list panel to view rules, or right-click to save results (e.g., to <code>bank-data-ar1.txt</code>).</li>
+    </ol>
+
+    <h3>CLI Method (Simple CLI)</h3>
+    <p>While the GUI only outputs generated rules, the CLI allows you to extract frequent itemsets directly.</p>
+
+    <p><strong>Standard Rule Generation:</strong></p>
+    <pre><code>java weka.associations.Apriori -N 100 -T 1 -C 1.5 -D 0.05 -U 1.0 -M 0.1 -S -1.0 -t directory-path\bank-data-final.arff</code></pre>
+
+    <p><strong>Save Frequent Itemsets (<code>-I</code> flag):</strong></p>
+    <pre><code>java weka.associations.Apriori -N 100 -T 1 -C 1.5 -D 0.05 -U 1.0 -M 0.1 -S -1.0 -I -t directory-path\bank-data-final.arff</code></pre>
+    <p><em>Note: Adding <code>-I</code> outputs all frequent itemsets (L<sub>1</sub> through L<sub>k</sub>) along with their support counts prior to presenting the final rules.</em></p>
+
+    <h2>3. Parameter Reference</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Parameter</th>
+                <th>Flag</th>
+                <th>Function</th>
+                <th>Example Setting</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Number of Rules</strong></td>
+                <td><span class="tag">-N</span></td>
+                <td>Limits the maximum number of rules to output</td>
+                <td><code>100</code></td>
+            </tr>
+            <tr>
+                <td><strong>Metric Type</strong></td>
+                <td><span class="tag">-T</span></td>
+                <td>Sorting metric criteria (0 = Confidence, 1 = Lift, 2 = Leverage, 3 = Conviction)</td>
+                <td><code>1</code> (Lift)</td>
+            </tr>
+            <tr>
+                <td><strong>Minimum Threshold</strong></td>
+                <td><span class="tag">-C</span></td>
+                <td>Minimum metric threshold value</td>
+                <td><code>1.5</code></td>
+            </tr>
+            <tr>
+                <td><strong>Delta Support</strong></td>
+                <td><span class="tag">-D</span></td>
+                <td>Delta decrement step for support reduction</td>
+                <td><code>0.05</code></td>
+            </tr>
+            <tr>
+                <td><strong>Upper Bound</strong></td>
+                <td><span class="tag">-U</span></td>
+                <td>Upper bound for minimum support</td>
+                <td><code>1.0</code></td>
+            </tr>
+            <tr>
+                <td><strong>Lower Bound</strong></td>
+                <td><span class="tag">-M</span></td>
+                <td>Lower bound for minimum support</td>
+                <td><code>0.1</code></td>
+            </tr>
+            <tr>
+                <td><strong>Significance Testing</strong></td>
+                <td><span class="tag">-S</span></td>
+                <td>Significance testing threshold</td>
+                <td><code>-1.0</code> (Disabled)</td>
+            </tr>
+            <tr>
+                <td><strong>Output Itemsets</strong></td>
+                <td><span class="tag">-I</span></td>
+                <td>Output frequent itemsets (CLI option)</td>
+                <td><code>Enabled</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
