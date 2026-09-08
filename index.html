@@ -1,0 +1,119 @@
+```
+<h1>Association Rule Mining via Apriori in WEKA (v3.4.1)</h1>
+<p>This guide details how to perform Association Rule Mining using the Apriori algorithm in WEKA (v3.4.1) through both the Graphical User Interface (GUI) and the Simple Command Line Interface (CLI).</p>
+
+<h2>1. Key Metric Definitions</h2>
+<p>WEKA evaluates association rules (<em>L &Rightarrow; R</em>) using several quantitative metrics:</p>
+
+<div class="metric-card">
+    <div class="metric-title">Support</div>
+    <p>The proportion of transactions containing a given itemset. Apriori iteratively steps down support from an Upper Bound (1.0 / 100%) to a Lower Bound (0.1 / 10%) using step decrements (&Delta; = 0.05).</p>
+</div>
+
+<div class="metric-card">
+    <div class="metric-title">Lift</div>
+    <div class="formula">Lift = P(L, R) / (P(L) &middot; P(R))</div>
+    <p>Measures co-occurrence likelihood relative to pure random chance. Values &gt; 1 indicate positive dependence between the antecedent and consequent.</p>
+</div>
+
+<div class="metric-card">
+    <div class="metric-title">Leverage</div>
+    <div class="formula">Leverage = P(L, R) - (P(L) &middot; P(R))</div>
+    <p>Measures the proportion of additional cases covering both <em>L</em> and <em>R</em> beyond independent expectations. Target values are &gt; 0.</p>
+</div>
+
+<div class="metric-card">
+    <div class="metric-title">Conviction</div>
+    <div class="formula">Conviction = (P(L) &middot; P(&not;R)) / P(L, &not;R)</div>
+    <p>Measures the strength of a rule by evaluating the frequency of the right-hand side failing to occur when the left-hand side occurs. Asymmetric metric with no upper bound.</p>
+</div>
+
+<h2>2. Workflow Options</h2>
+
+<h3>GUI Method (Explorer)</h3>
+<ol>
+    <li><strong>Load Data:</strong> Open WEKA Explorer and load preprocessed, discretized data (e.g., <code>bank-data-final.arff</code>).</li>
+    <li><strong>Select Module:</strong> Navigate to the <strong>Associate</strong> tab (defaults to the Apriori algorithm).</li>
+    <li><strong>Configure Parameters:</strong> Click the command-line options box next to the "Choose" button to set parameters:
+        <ul>
+            <li><strong>Metric Type (<code>-T</code>):</strong> Set sorting criteria (e.g., set metric to Lift at a minimum threshold of 1.5).</li>
+            <li><strong>Rule Limit (<code>-N</code>):</strong> Increase maximum output rules (e.g., change default from 10 to 100).</li>
+            <li><strong>Bounds (<code>-U</code> / <code>-M</code>):</strong> Set Upper Bound support to 1.0 and Lower Bound support to 0.1.</li>
+        </ul>
+    </li>
+    <li><strong>Execute &amp; Save:</strong> Click <strong>Start</strong>. Select a run in the Result list panel to view rules, or right-click to save results (e.g., to <code>bank-data-ar1.txt</code>).</li>
+</ol>
+
+<h3>CLI Method (Simple CLI)</h3>
+<p>While the GUI only outputs generated rules, the CLI allows you to extract frequent itemsets directly.</p>
+
+<p><strong>Standard Rule Generation:</strong></p>
+<pre><code>java weka.associations.Apriori -N 100 -T 1 -C 1.5 -D 0.05 -U 1.0 -M 0.1 -S -1.0 -t directory-path\bank-data-final.arff</code></pre>
+
+<p><strong>Save Frequent Itemsets (<code>-I</code> flag):</strong></p>
+<pre><code>java weka.associations.Apriori -N 100 -T 1 -C 1.5 -D 0.05 -U 1.0 -M 0.1 -S -1.0 -I -t directory-path\bank-data-final.arff</code></pre>
+<p><em>Note: Adding <code>-I</code> outputs all frequent itemsets (L<sub>1</sub> through L<sub>k</sub>) along with their support counts prior to presenting the final rules.</em></p>
+
+<h2>3. Parameter Reference</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Flag</th>
+            <th>Function</th>
+            <th>Example Setting</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Number of Rules</strong></td>
+            <td><span class="tag">-N</span></td>
+            <td>Limits the maximum number of rules to output</td>
+            <td><code>100</code></td>
+        </tr>
+        <tr>
+            <td><strong>Metric Type</strong></td>
+            <td><span class="tag">-T</span></td>
+            <td>Sorting metric criteria (0 = Confidence, 1 = Lift, 2 = Leverage, 3 = Conviction)</td>
+            <td><code>1</code> (Lift)</td>
+        </tr>
+        <tr>
+            <td><strong>Minimum Threshold</strong></td>
+            <td><span class="tag">-C</span></td>
+            <td>Minimum metric threshold value</td>
+            <td><code>1.5</code></td>
+        </tr>
+        <tr>
+            <td><strong>Delta Support</strong></td>
+            <td><span class="tag">-D</span></td>
+            <td>Delta decrement step for support reduction</td>
+            <td><code>0.05</code></td>
+        </tr>
+        <tr>
+            <td><strong>Upper Bound</strong></td>
+            <td><span class="tag">-U</span></td>
+            <td>Upper bound for minimum support</td>
+            <td><code>1.0</code></td>
+        </tr>
+        <tr>
+            <td><strong>Lower Bound</strong></td>
+            <td><span class="tag">-M</span></td>
+            <td>Lower bound for minimum support</td>
+            <td><code>0.1</code></td>
+        </tr>
+        <tr>
+            <td><strong>Significance Testing</strong></td>
+            <td><span class="tag">-S</span></td>
+            <td>Significance testing threshold</td>
+            <td><code>-1.0</code> (Disabled)</td>
+        </tr>
+        <tr>
+            <td><strong>Output Itemsets</strong></td>
+            <td><span class="tag">-I</span></td>
+            <td>Output frequent itemsets (CLI option)</td>
+            <td><code>Enabled</code></td>
+        </tr>
+    </tbody>
+</table>
+
+```
